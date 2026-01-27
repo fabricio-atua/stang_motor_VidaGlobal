@@ -1,0 +1,21 @@
+[theme]
+base="Light"
+
+primaryColor="#ec0c44"
+backgroundColor="#0E1117"
+secondaryBackgroundColor="#1C1F26"
+textColor="#FFFFFF"
+font="sans serif"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+port = 5001
+
+[browser]
+gatherUsageStats = false
+
+
+
+
