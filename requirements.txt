@@ -1,1 +1,2 @@
-streamlit
+Python 3.13.11
+Streamlit 1.53.1
