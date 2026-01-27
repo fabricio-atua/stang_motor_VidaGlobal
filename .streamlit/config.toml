@@ -1,5 +1,5 @@
 [theme]
-base="Light"
+base="light"
 
 primaryColor="#ec0c44"
 backgroundColor="#0E1117"
@@ -15,7 +15,3 @@ port = 5001
 
 [browser]
 gatherUsageStats = false
-
-
-
-
