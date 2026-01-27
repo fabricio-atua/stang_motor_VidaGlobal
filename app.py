@@ -7,9 +7,7 @@ if "capital_txt" not in st.session_state:
     st.session_state.capital_txt = "100.000,00"
 
 from calculo.engine import calcula_premio_grupo
-
 from calculo.taxas import DESCRICOES
-
 from utils.formatacao import moeda
 
 
@@ -19,6 +17,9 @@ from utils.formatacao import moeda
 
 CAPITAL_MAX = 1_000_000
 CAPITAL_MIN = 1000
+
+VIDAS_MAX = 600
+VIDAS_MIN = 1
 
 
 def moeda_para_float(valor):
@@ -122,11 +123,13 @@ st.subheader("Quantidade de Vidas")
 
 vidas = st.number_input(
     "vidas",
-    min_value=1,
+    min_value=VIDAS_MIN,
+    max_value=VIDAS_MAX,
     value=100,
     step=1,
     label_visibility="collapsed"
 )
+st.caption("Limite máximo permitido: 600 vidas")
 
 st.markdown("---")
 
@@ -179,6 +182,12 @@ if st.button("Calcular Prêmio"):
 
     elif capital > CAPITAL_MAX:
         st.error("Capital máximo permitido: R$ 1.000.000,00")
+
+    elif vidas < VIDAS_MIN:
+        st.error("Quantidade mínima de vidas: 1")
+
+    elif vidas > VIDAS_MAX:
+        st.error("Quantidade máxima permitida: 600 vidas")
 
     else:
 
