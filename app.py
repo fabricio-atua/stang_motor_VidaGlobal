@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 import base64
 
 if "capital_txt" not in st.session_state:
-    st.session_state.capital_txt = "100.000,00"
+    st.session_state.capital_txt = "50.000,00"
 
 from calculo.engine import calcula_premio_grupo
 from calculo.taxas import DESCRICOES
@@ -15,7 +15,7 @@ from utils.formatacao import moeda
 # CONFIG
 # -----------------------------
 
-CAPITAL_MAX = 1_000_000
+CAPITAL_MAX = 500_000
 CAPITAL_MIN = 1000
 
 VIDAS_MAX = 600
@@ -87,9 +87,9 @@ capital_html = f"""
 
         let num = parseFloat(v) / 100;
 
-        // LIMITE MÁXIMO = 1.000.000
-        if (num > 1000000) {{
-            num = 1000000;
+        // LIMITE MÁXIMO = 500.000
+        if (num > 500000) {{
+            num = 500000;
         }}
 
         num = num.toFixed(2) + '';
@@ -101,8 +101,10 @@ capital_html = f"""
 />
 """
 
+
 components.html(capital_html, height=65)
 
+st.caption("Valor máximo de Capital Segurado Permitido: R$ 500.000,00.")
 
 # Converte para float
 try:
@@ -115,6 +117,7 @@ except:
     capital = 0
 
 
+st.markdown("---")
 # -----------------------------
 # QUANTIDADE DE VIDAS
 # -----------------------------
