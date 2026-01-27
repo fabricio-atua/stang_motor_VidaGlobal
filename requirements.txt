@@ -1,2 +1,2 @@
-Python
-Streamlit
+python-3.11
+streamlit
