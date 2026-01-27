@@ -5,8 +5,10 @@ import base64
 if "capital_txt" not in st.session_state:
     st.session_state.capital_txt = "100.000,00"
 
-from calculo.motor import calcula_premio_grupo
+from calculo.engine import calcula_premio_grupo
+
 from calculo.taxas import DESCRICOES
+
 from utils.formatacao import moeda
 
 
@@ -202,3 +204,7 @@ if st.button("Calcular Prêmio"):
                 f"Taxa: {dados['taxa']*100:.5f}% | "
                 f"Prêmio: {moeda(dados['premio'])}"
             )
+
+
+#rode este trecho no terminal para apaarecer o Motor Vida Global
+# streamlit run calculo/app.py  
