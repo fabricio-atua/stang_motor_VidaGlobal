@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import streamlit.components.v1 as components
 import base64
 
@@ -38,7 +39,10 @@ def carregar_logo(caminho):
     return base64.b64encode(data).decode()
 
 
-logo_base64 = carregar_logo("img/New_logo.png")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+logo_path = os.path.join(BASE_DIR, "img", "New_logo.png")
+
+logo_base64 = carregar_logo(logo_path)
 
 st.markdown(
     f"""

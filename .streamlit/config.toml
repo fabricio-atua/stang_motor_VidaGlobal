@@ -11,7 +11,6 @@ font="sans serif"
 headless = true
 enableCORS = false
 enableXsrfProtection = false
-port = 5001
 
 [browser]
 gatherUsageStats = false
