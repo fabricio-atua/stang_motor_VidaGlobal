@@ -1,10 +1,6 @@
 import streamlit as st
 import os
-import streamlit.components.v1 as components
 import base64
-
-if "capital_txt" not in st.session_state:
-    st.session_state.capital_txt = "50.000,00"
 
 from calculo.engine import calcula_premio_grupo
 from calculo.taxas import DESCRICOES
@@ -12,33 +8,123 @@ from utils.formatacao import moeda
 
 
 # -----------------------------
-# CONFIG
+# CONFIG LIMITES
 # -----------------------------
 
-CAPITAL_MAX = 500_000
-CAPITAL_MIN = 1000
-
+CAPITAL_MAX_FUNC = 100_000
+CAPITAL_MAX_SOCIO = 250_000
 VIDAS_MAX = 600
-VIDAS_MIN = 1
 
+
+# -----------------------------
+# SESSION STATE
+# -----------------------------
+
+if "capital_func_txt" not in st.session_state:
+    st.session_state.capital_func_txt = "100.000,00"
+
+if "capital_socio_txt" not in st.session_state:
+    st.session_state.capital_socio_txt = "200.000,00"
+
+if "erro_func" not in st.session_state:
+    st.session_state.erro_func = False
+
+if "erro_socio" not in st.session_state:
+    st.session_state.erro_socio = False
+
+
+# -----------------------------
+# FUNÇÕES
+# -----------------------------
 
 def moeda_para_float(valor):
-    valor = valor.replace(".", "").replace(",", ".")
-    return float(valor)
+    return float(valor.replace(".", "").replace(",", "."))
 
+
+def formatar_input(key, limite):
+
+    texto = st.session_state[key]
+
+    # mantém só números
+    numeros = "".join(filter(str.isdigit, texto))
+
+    if numeros == "":
+        st.session_state[key] = "0,00"
+        return
+
+    # impede número absurdo digitando
+    numeros = numeros[-9:]
+
+    valor_float = int(numeros) / 100
+
+    estourou = False
+
+    if valor_float > limite:
+        valor_float = limite
+        estourou = True
+
+    valor_formatado = f"{valor_float:,.2f}"
+    valor_formatado = valor_formatado.replace(",", "X").replace(".", ",").replace("X", ".")
+
+    st.session_state[key] = valor_formatado
+
+    if key == "capital_func_txt":
+        st.session_state.erro_func = estourou
+
+    if key == "capital_socio_txt":
+        st.session_state.erro_socio = estourou
+
+
+def carregar_logo(caminho):
+    with open(caminho, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+def aplicar_css_inputs():
+    st.markdown("""
+    <style>
+
+    input {
+        border-radius: 12px !important;
+        background-color: #0e1117 !important;
+        border: 1px solid #2c2f36 !important;
+        color: white !important;
+        padding-left: 42px !important;
+    }
+
+    .prefix-rs {
+        position: relative;
+    }
+
+    .prefix-rs:before {
+        content: "R$";
+        position: absolute;
+        left: 12px;
+        top: 9px;
+        color: #9aa0a6;
+        font-size: 14px;
+        pointer-events: none;
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# -----------------------------
+# PAGE CONFIG
+# -----------------------------
 
 st.set_page_config(
     page_title="Simulador Vida em Grupo",
     layout="centered"
 )
 
-import base64
+aplicar_css_inputs()
 
-def carregar_logo(caminho):
-    with open(caminho, "rb") as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
 
+# -----------------------------
+# LOGO
+# -----------------------------
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 logo_path = os.path.join(BASE_DIR, "img", "New_logo.png")
@@ -47,107 +133,117 @@ logo_base64 = carregar_logo(logo_path)
 
 st.markdown(
     f"""
-    <div style="display: flex; align-items: center; gap: 5px;">
+    <div style="display:flex;align-items:center;gap:12px;">
         <img src="data:image/png;base64,{logo_base64}" width="120">
-        <h1 style="margin: 0;">Simulador Vida em Grupo</h1>
+        <h1 style="margin:0;">Simulador Vida em Grupo</h1>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-
 st.markdown("---")
 
-# -----------------------------
-# CAPITAL COM MÁSCARA
-# -----------------------------
 
-st.subheader("Capital Segurado por Vida (R$)")
+# =====================================================
+# FUNCIONÁRIOS
+# =====================================================
 
-capital_html = f"""
-<input 
-    type="text" 
-    value="{st.session_state.capital_txt}"
-    style="
-        width: 100%;
-        padding: 0.75rem;
-        font-size: 1rem;
-        border-radius: 10px;
-        border: 1px solid #333;
-        background-color: #0e1117;
-        color: white;
-    "
-    oninput="
-        let v = this.value.replace(/\\D/g,'');
+st.subheader("Funcionários")
 
-        if (v === '') {{
-            this.value = '0,00';
-            return;
-        }}
+col1, col2 = st.columns(2)
 
-        let num = parseFloat(v) / 100;
+with col1:
 
-        // LIMITE MÁXIMO = 500.000
-        if (num > 500000) {{
-            num = 500000;
-        }}
+    st.markdown("**Quantidade de Vidas**")
 
-        num = num.toFixed(2) + '';
-        num = num.replace('.', ',');
-        num = num.replace(/(\\d)(?=(\\d{{3}})+(?!\\d))/g, '$1.');
-
-        this.value = num;
-    "
-/>
-"""
-
-
-components.html(capital_html, height=65)
-
-st.caption("Valor máximo de Capital Segurado Permitido: R$ 500.000,00.")
-
-# Converte para float
-try:
-    capital = float(
-        st.session_state.capital_txt
-        .replace(".", "")
-        .replace(",", ".")
+    vidas_func = st.number_input(
+        "vidas_func",
+        min_value=0,
+        max_value=VIDAS_MAX,
+        value=100,
+        step=1,
+        label_visibility="collapsed"
     )
-except:
-    capital = 0
+
+    st.caption("Limite máximo: 600 vidas")
 
 
-st.markdown("---")
-# -----------------------------
-# QUANTIDADE DE VIDAS
-# -----------------------------
+with col2:
 
-st.subheader("Quantidade de Vidas")
+    st.markdown("**Capital Segurado por Vida**")
 
-vidas = st.number_input(
-    "vidas",
-    min_value=VIDAS_MIN,
-    max_value=VIDAS_MAX,
-    value=100,
-    step=1,
-    label_visibility="collapsed"
+    st.text_input(
+        "capital_func_txt",
+        key="capital_func_txt",
+        on_change=formatar_input,
+        args=("capital_func_txt", CAPITAL_MAX_FUNC),
+        label_visibility="collapsed"
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown(
+    "<div style='margin-top:-20px; font-size:16px; color:#ff4b4b;'>Capital máximo permitido: R$ 100.000,00</div>",
+    unsafe_allow_html=True
 )
-st.caption("Limite máximo permitido: 600 vidas")
+
+
+
+# =====================================================
+# SÓCIOS
+# =====================================================
 
 st.markdown("---")
+st.subheader("Sócios")
+
+col3, col4 = st.columns(2)
+
+with col3:
+
+    st.markdown("**Quantidade de Vidas**")
+
+    vidas_socio = st.number_input(
+        "vidas_socio",
+        min_value=0,
+        max_value=VIDAS_MAX,
+        value=5,
+        step=1,
+        label_visibility="collapsed"
+    )
+
+    st.caption("Limite máximo: 600 vidas")
+
+
+with col4:
+
+    st.markdown("**Capital Segurado por Vida**")
+
+    st.text_input(
+        "capital_socio_txt",
+        key="capital_socio_txt",
+        on_change=formatar_input,
+        args=("capital_socio_txt", CAPITAL_MAX_SOCIO),
+        label_visibility="collapsed"
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+ 
+    st.markdown(
+    "<div style='margin-top:-20px; font-size:16px; color:#ff4b4b;'>Capital máximo permitido: R$ 250.000,00</div>",
+    unsafe_allow_html=True
+)
+
 
 # -----------------------------
-# COBERTURA BÁSICA
+# COBERTURAS
 # -----------------------------
+
+st.markdown("---")
 
 st.subheader("Cobertura Básica")
-
 st.checkbox("MORTE (Obrigatória)", value=True, disabled=True)
 
-
-# -----------------------------
-# COBERTURAS ADICIONAIS
-# -----------------------------
 st.subheader("Coberturas Adicionais")
 
 opcoes_adicionais = {
@@ -164,63 +260,88 @@ opcoes_adicionais = {
 adicionais = []
 
 for codigo, descricao in opcoes_adicionais.items():
-    marcado = st.checkbox(descricao)
-
-    if marcado:
+    if st.checkbox(descricao):
         adicionais.append(codigo)
 
-# Junta com básica obrigatória
 coberturas = ["MORTE"] + adicionais
 
-st.markdown("---")
 
 # -----------------------------
 # BOTÃO CALCULAR
 # -----------------------------
+
+st.markdown("---")
+
 if st.button("Calcular Prêmio"):
 
-    # VALIDAÇÕES
-    if capital < CAPITAL_MIN:
-        st.error("Capital mínimo permitido: R$ 1.000,00")
+    capital_func = moeda_para_float(st.session_state.capital_func_txt)
+    capital_socio = moeda_para_float(st.session_state.capital_socio_txt)
 
-    elif capital > CAPITAL_MAX:
-        st.error("Capital máximo permitido: R$ 1.000.000,00")
+    total_vidas = vidas_func + vidas_socio
 
-    elif vidas < VIDAS_MIN:
-        st.error("Quantidade mínima de vidas: 1")
-
-    elif vidas > VIDAS_MAX:
-        st.error("Quantidade máxima permitida: 600 vidas")
+    if total_vidas == 0:
+        st.error("Informe pelo menos 1 vida.")
 
     else:
 
-        premio_vida, premio_grupo, detalhes = calcula_premio_grupo(
-            capital,
-            coberturas,
-            vidas
+        premio_func_vida, premio_func_total, detalhes_func = calcula_premio_grupo(
+            capital_func, coberturas, vidas_func
         )
+
+        premio_socio_vida, premio_socio_total, detalhes_socios = calcula_premio_grupo(
+            capital_socio, coberturas, vidas_socio
+        )
+
+        premio_grupo = premio_func_total + premio_socio_total
 
         st.success("✅ Cotação Gerada com Sucesso")
 
-        st.metric(
-            label="Prêmio Mensal por Vida",
-            value=moeda(premio_vida)
-        )
+        # -----------------------------
+        # RESUMO
+        # -----------------------------
 
-        st.metric(
-            label="Prêmio Mensal do Grupo",
-            value=moeda(premio_grupo)
-        )
+        st.markdown("---")
+        st.subheader("Resumo - Prêmios Totais")
 
-        st.subheader("Detalhamento por Cobertura (por vida)")
+        r1, r2, r3 = st.columns(3)
 
-        for cobertura, dados in detalhes.items():
-            st.write(
-                f"**{cobertura}** | "
-                f"Taxa: {dados['taxa']*100:.5f}% | "
-                f"Prêmio: {moeda(dados['premio'])}"
+        r1.metric("Prêmio Funcionários", moeda(premio_func_total))
+        r2.metric("Prêmio Sócios", moeda(premio_socio_total))
+        r3.metric("Prêmio Total do Grupo", moeda(premio_grupo))
+
+        # -----------------------------
+        # DETALHAMENTO
+        # -----------------------------
+
+        st.markdown("---")
+        st.subheader("Detalhamento por Cobertura (por Vida)")
+
+        h1, h2, h3 = st.columns([2, 1.5, 1.5])
+
+        h1.markdown("**Cobertura**")
+        h2.markdown("**Funcionários**")
+        h3.markdown("**Sócios**")
+
+        for cobertura in detalhes_func.keys():
+
+            taxa = detalhes_func[cobertura]["taxa"]
+
+            premio_func = detalhes_func[cobertura]["premio"]
+            premio_soc = detalhes_socios[cobertura]["premio"]
+
+            c1, c2, c3 = st.columns([2, 1.5, 1.5])
+
+            c1.write(
+                f"""
+                **{cobertura}**  
+                <span style='font-size:12px;color:#9aa0a6'>
+                Taxa: {taxa*100:.5f}%
+                </span>
+                """,
+                unsafe_allow_html=True
             )
 
+            c2.write(moeda(premio_func))
+            c3.write(moeda(premio_soc))
 
-#rode este trecho no terminal para apaarecer o Motor Vida Global
-# streamlit run calculo/app.py  
+        st.markdown("---")
