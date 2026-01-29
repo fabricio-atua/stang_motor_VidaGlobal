@@ -301,7 +301,7 @@ if st.button("Calcular Prêmio"):
         # -----------------------------
 
         st.markdown("---")
-        st.subheader("Resumo - Prêmios Totais")
+        st.subheader("Resumo - Totais Prêmios Puro")
 
         r1, r2, r3 = st.columns(3)
 
@@ -309,12 +309,18 @@ if st.button("Calcular Prêmio"):
         r2.metric("Prêmio Sócios", moeda(premio_socio_total))
         r3.metric("Prêmio Total do Grupo", moeda(premio_grupo))
 
+        st.markdown(
+        "<div style='margin-top:-3px; font-size:16px; color:#ff4b4b;'>Nota: Prêmio Puro, sem inclusão de carregamentos.</div>",
+        unsafe_allow_html=True)
+
+        st.markdown("---")
+
         # -----------------------------
         # DETALHAMENTO
         # -----------------------------
 
-        st.markdown("---")
-        st.subheader("Detalhamento por Cobertura (por Vida)")
+
+        st.subheader("Detalhamento do Prêmio Puro por Cobertura (por Vida)")
 
         h1, h2, h3 = st.columns([2, 1.5, 1.5])
 
