@@ -1,6 +1,3 @@
-from turtle import st
-
-
 def run():
 
     import streamlit as st
