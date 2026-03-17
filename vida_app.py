@@ -86,7 +86,7 @@ def run():
         st.markdown("""
         <style>
 
-        input {
+        div[data-testid="stTextInput"] input {
             border-radius: 12px !important;
             background-color: #0e1117 !important;
             border: 1px solid #2c2f36 !important;
